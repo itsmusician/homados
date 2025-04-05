@@ -1,8 +1,8 @@
 # homados
 
-awesome software tagline in progress!
+Signal should be simple.
 
-Version 0.0.1
+Version 0.0.2
 </br></br></br>
 
 ## Info
@@ -39,13 +39,9 @@ Twitch:     <https://www.twitch.tv/connermusician><br/>
   
 ### Roadmap
 
-- Phase Accumulator versions of oscillators for cleaner tones and useable sweeps
 - A few more standard noise types, namely burst and true OVN
 - More predictable and defined multichannel behavior
 - dBFS units as an optional alternative to pure amplitude values for the gain scalar
 - output normalization
-- Pulse-Width generator
-- Single argument for filepath + file name
-- Signal time offset
 - More options in the debug script
 - other stuff but I'm not tellin'

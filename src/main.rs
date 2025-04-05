@@ -2,17 +2,11 @@
 /////////////////////////////////////////////////
 //                                             //
 //                h o m a d o s                //
-//       sound generator and test suite!       //
+//          Signal should be simple.           //
 //                                             //
 /////////////////////////////////////////////////
 
 // Welcome to homados :)
-//
-// homados likes to make noise, and is always finding new ways to do it!
-// Check out the README.md file for more information on that matter. From this point forward, 
-// any information in code comments will aim to help you understand how homados works under the
-// hood -- what it's doing and when, and some very brief remarks about creative decisions that
-// were decided upon in its implementation.
 
 use std::fs;
 use std::path::Path;
@@ -22,15 +16,22 @@ use hound;
 mod generator;
 mod window;
 
+// Convert dBFS value to amplitude
+fn dbfs_to_amp(input: f32) -> f32 {
+    10.0f32.powf(input / 20.0)
+}
+
 // We'll use clap to handle all our command line input logistics and set up some opinionated
 // default values to make creating sound as simple as one wants it to be.
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
     /// Output file path destination
+    #[arg(default_value = "./homados Output", hide_default_value = true)]
     path: String,
 
     /// Output file name
+    #[arg(default_value = "homados_output", hide_default_value = true)]
     name: String,
 
     /// Sample Rate
@@ -58,15 +59,36 @@ struct Cli {
             default_value = "10.0", hide_default_value = true)]
     duration_seconds: f32,
 
-    /// Base generator frequency
+    /// Base frequency
     #[arg(short = 'f', long = "BaseFrequency", required = false, value_name = "Float", 
             default_value = "440.0", hide_default_value = true)]
-    freq_0: f32,
+    freq: f32,
+
+    /// Minimum frequency
+    #[arg(long = "MinFrequency", required = false, value_name = "Float", 
+            default_value = "20.0", hide_default_value = true)]
+    freq_min: f32,
+
+    /// Maximum frequency
+    #[arg(long = "MaxFrequency", required = false, value_name = "Float", 
+            default_value = "20000.0", hide_default_value = true)]
+    freq_max: f32,
+
+    /// Time offset in seconds
+    #[arg(short = 'o', long = "Offset", required = false, value_name = "Float",
+            allow_hyphen_values = true, number_of_values = 1, default_value = "0.0", 
+            hide_default_value = true)]
+    offset: f32,
 
     /// Generator-Specific Parameter 1
-    #[arg(long = "Param1", required = false, value_name = "Float", 
+    #[arg(short = 'p', long = "Param1", required = false, value_name = "Float",  
             default_value = "1.0", hide_default_value = true)]
     param_1: f32,
+
+    /// Generator-Specific Parameter 1 as dBFS value
+    #[arg(long = "Param1db", required = false, value_name = "Float", allow_hyphen_values = true,  
+            number_of_values = 1, default_value = "0.0", hide_default_value = true)]
+    param_1_db: f32,
 
     /// Shape of the gain envelope / "fade window"
     #[arg(short = 'w', long = "WindowShape", required = false, value_name = "String", 
@@ -97,6 +119,20 @@ fn main() {
         sample_format: hound::SampleFormat::Int,
     };
 
+    let sound = generator::Sound {
+        sv: [0.0; 8],
+        freq: cli.freq.clone(),
+        freq_min: cli.freq_min.clone(),
+        freq_max: cli.freq_max.clone(),
+        offset: cli.rate.clone() as f32 * cli.offset.clone(),
+        p1: 
+            if cli.param_1_db.clone() != 0.0 {
+                dbfs_to_amp(cli.param_1_db.clone())
+            } else {
+                cli.param_1.clone()
+            },
+    };
+
     // Scaling the volume should always be possible -- regardless of the window shape.
     // If the user doesn't give us a value though, we'll just assume no change in gain.
     if cli.gain.abs() > 1.0 
@@ -120,5 +156,5 @@ fn main() {
     spec.sample_rate = cli.rate;
     
     // Now call the appropriate sound generating function.
-    generator::create_sound(output_path, spec, &cli.sound_type, cli.duration_seconds, &cli.window, cli.window_k, cli.param_1, cli.freq_0, cli.gain, cli.verbose);
+    generator::create_sound(output_path, spec, sound, &cli.sound_type, cli.duration_seconds, &cli.window, cli.window_k, cli.gain, cli.verbose);
 }

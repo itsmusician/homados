@@ -691,7 +691,7 @@ pub fn tet_oi(duration: f32, sample: f32) -> f32 {
 // - - - - - - - - - - - - - - - - - - - - - - -
 
 
-// Super Log
+// Super Log: Reciprocal tetrational curves, not true super-log
 pub fn slg_out(duration: f32, sample: f32) -> f32 {
     1.0 - (sample.powf(sample / duration) / duration)
 }

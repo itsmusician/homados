@@ -1,5 +1,50 @@
 # Changelog
 
+**0.0.3** - [2025.00.00] Description
+</br>
+
+    HI
+
+    homados -- *.rs
+    - All f32 values have been refactored to be f64 for increased precision, and to address an
+        annoying bug related to this which affected many signal outputs negatively.
+
+    homados -- main.rs
+    - New "--GaindB" / "-G" argument allows the user to specify the gain scalar value in terms of
+        dBFS as the unit. The short alias is Capital 'G', while the non-dBFS amplitude-based
+        version uses a lowercase 'g' instead. The default value is 0dBFS.
+    - New "--DurationSamples" / "-D" argument allows the user to specify the output duration in
+        terms of samples as the unit. The short alias is Capital 'D', while the second-based
+        version uses a lowercase 'd' instead. The default value is 480,000 samples. (10s in 48k)
+    - New "--p2" argument allows a second generator-specific argument to be passed in
+    - New "--p2dB" argument is the same as p2, but in dBFS units
+    - The "--SoundDuration" argument has been renamed to "--DurationSeconds" for consistency
+    - The "--Param1" argument has been renamed to "--p1" for consistency
+    - The "--Param1db" argument has been renamed to "--p1dB" for consistency
+
+    homados -- generator.rs
+    - New sound types for the generator:
+      - Pulse Width Sweep
+        - Parameter 1 specifies the starting pulse width
+        - Parameter 2 specifies the ending pulse width
+    - Introduced groundwork for Dirac Comb Sweep modes
+      - Currently disabled, exhibits poor results due to lack of anti-aliasing
+        - Easily re-enabled through removing comments for the experimentally-curious!
+    
+    debug.sh
+    - Added Partial Debugging Support
+      - The original behavior is a full test
+      - The user is now prompted whether to run a full test or not
+        - If not, the sound and window type tests are individually prompted respectively, and then
+            run according to the prompt responses.
+      - Any combination of the partial tests may be run, including no test at all.
+    - Added Pulse Wave to test cases (oopsie!)
+    - Added new Pulse Width Sweep to test cases
+    - There is now a test completion message
+    
+    homados Manual
+    - Updated text to reflect updates as seen in the changelog
+
 **0.0.2** - [2025.04.05] Saturday afternoon, starting to get quite warm out
 </br>
 

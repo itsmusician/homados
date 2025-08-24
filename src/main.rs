@@ -17,8 +17,8 @@ mod generator;
 mod window;
 
 // Convert dBFS value to amplitude
-fn dbfs_to_amp(input: f32) -> f32 {
-    10.0f32.powf(input / 20.0)
+fn dbfs_to_amp(input: f64) -> f64 {
+    10.0f64.powf(input / 20.0)
 }
 
 // We'll use clap to handle all our command line input logistics and set up some opinionated
@@ -55,40 +55,55 @@ struct Cli {
     sound_type: String,
 
     /// Duration of sound in seconds
-    #[arg(short = 'd', long = "SoundDuration", required = false, value_name = "Positive Float", 
+    #[arg(short = 'd', long = "DurationSeconds", required = false, value_name = "Positive Float", 
             default_value = "10.0", hide_default_value = true)]
-    duration_seconds: f32,
+    duration_seconds: f64,
+
+    /// Duration of sound in samples
+    #[arg(short = 'D', long = "DurationSamples", required = false, value_name = "Positive Float", 
+            default_value = "480000", hide_default_value = true)]
+    duration_samples: f64,
 
     /// Base frequency
     #[arg(short = 'f', long = "BaseFrequency", required = false, value_name = "Float", 
             default_value = "440.0", hide_default_value = true)]
-    freq: f32,
+    freq: f64,
 
     /// Minimum frequency
     #[arg(long = "MinFrequency", required = false, value_name = "Float", 
             default_value = "20.0", hide_default_value = true)]
-    freq_min: f32,
+    freq_min: f64,
 
     /// Maximum frequency
     #[arg(long = "MaxFrequency", required = false, value_name = "Float", 
             default_value = "20000.0", hide_default_value = true)]
-    freq_max: f32,
+    freq_max: f64,
 
     /// Time offset in seconds
     #[arg(short = 'o', long = "Offset", required = false, value_name = "Float",
             allow_hyphen_values = true, number_of_values = 1, default_value = "0.0", 
             hide_default_value = true)]
-    offset: f32,
+    offset: f64,
 
     /// Generator-Specific Parameter 1
-    #[arg(short = 'p', long = "Param1", required = false, value_name = "Float",  
+    #[arg(short = 'p', long = "p1", required = false, value_name = "Float",  
             default_value = "1.0", hide_default_value = true)]
-    param_1: f32,
+    param_1: f64,
 
     /// Generator-Specific Parameter 1 as dBFS value
-    #[arg(long = "Param1db", required = false, value_name = "Float", allow_hyphen_values = true,  
+    #[arg(long = "p1dB", required = false, value_name = "Float", allow_hyphen_values = true,  
             number_of_values = 1, default_value = "0.0", hide_default_value = true)]
-    param_1_db: f32,
+    param_1_db: f64,
+
+    /// Generator-Specific Parameter 2
+    #[arg(long = "p2", required = false, value_name = "Float",  
+            default_value = "1.0", hide_default_value = true)]
+    param_2: f64,
+
+    /// Generator-Specific Parameter 2 as dBFS value
+    #[arg(long = "p2dB", required = false, value_name = "Float", allow_hyphen_values = true,  
+            number_of_values = 1, default_value = "0.0", hide_default_value = true)]
+    param_2_db: f64,
 
     /// Shape of the gain envelope / "fade window"
     #[arg(short = 'w', long = "WindowShape", required = false, value_name = "String", 
@@ -98,12 +113,18 @@ struct Cli {
     /// Modifier for fade window curve shape
     #[arg(long = "WindowCurve", required = false, value_name = "Float", 
             default_value = "2.0", hide_default_value = true)]
-    window_k: f32,
+    window_k: f64,
 
-    /// Gain scalar value
+    /// Gain scalar
     #[arg(short = 'g', long = "Gain", required = false, value_name = "Float", 
             default_value = "1.0", hide_default_value = true, allow_hyphen_values = true)]
-    gain: f32,
+    gain: f64,
+
+    /// Gain scalar as dBFS value
+    #[arg(short = 'G', long = "GaindB", required = false, value_name = "Float", 
+            default_value = "0.0", allow_hyphen_values = true, number_of_values = 1, 
+            hide_default_value = true)]
+    gain_db: f64,
     
     /// Display verbose output
     #[arg(short, long)]
@@ -124,21 +145,39 @@ fn main() {
         freq: cli.freq.clone(),
         freq_min: cli.freq_min.clone(),
         freq_max: cli.freq_max.clone(),
-        offset: cli.rate.clone() as f32 * cli.offset.clone(),
+        offset: cli.rate.clone() as f64 * cli.offset.clone(),
         p1: 
             if cli.param_1_db.clone() != 0.0 {
                 dbfs_to_amp(cli.param_1_db.clone())
             } else {
                 cli.param_1.clone()
             },
+        p2: 
+            if cli.param_2_db.clone() != 0.0 {
+                dbfs_to_amp(cli.param_2_db.clone())
+            } else {
+                cli.param_2.clone()
+            },
     };
 
+    // We only need to pass in one gain scalar. If both unit types are provided, dB will triumph.
+    let mut gain = cli.gain;
+    if cli.gain_db != 0.0 {gain = dbfs_to_amp(cli.gain_db)};
+
     // Scaling the volume should always be possible -- regardless of the window shape.
-    // If the user doesn't give us a value though, we'll just assume no change in gain.
-    if cli.gain.abs() > 1.0 
-        {println!("\nWARNING: |Scalar| > 1.0\nThis may cause the output to clip.\n\n")}
-    if cli.gain < 0.0
-        {println!("\nWARNING: Scalar < 0.0\nThis will flip the signal polarity\n\n")}
+    // Warn the user if the given gain value may cause any issues.
+    if gain.abs() > 1.0 && cli.gain_db == 0.0
+        {println!("\nWARNING: |Scalar| > 1.0 Amplitude\nThis may cause the output to clip.\n\n")}
+    if gain < 0.0 && cli.gain_db == 0.0
+        {println!("\nWARNING: Scalar < 0.0 Amplitude\nThis will flip the signal polarity\n\n")}
+    if cli.gain_db > 0.0 
+        {println!("\nWARNING: Scalar > 0.0dBFS\nThis may cause the output to clip.\n\n")}
+
+    // We only need to pass in one duration. If both unit types are provided, samples triumphs.
+    let mut duration = cli.duration_samples;
+    if cli.duration_samples == 480000.0 && cli.duration_seconds != 10.0 {
+        duration = cli.duration_seconds * cli.rate as f64;
+    }
 
     // We will create the directory for our output in case it does not already exist.
     if Path::new(cli.path.clone().as_str()).exists() == false {
@@ -156,5 +195,5 @@ fn main() {
     spec.sample_rate = cli.rate;
     
     // Now call the appropriate sound generating function.
-    generator::create_sound(output_path, spec, sound, &cli.sound_type, cli.duration_seconds, &cli.window, cli.window_k, cli.gain, cli.verbose);
+    generator::create_sound(output_path, spec, sound, &cli.sound_type, duration, &cli.window, cli.window_k, gain, cli.verbose);
 }

@@ -2,13 +2,13 @@
 
 Signal should be simple.
 
-Version 0.0.2
+Version 0.0.3
 </br></br></br>
 
 ## Info
 
 homados is a software tool for generating all different kinds of sounds -- tonal, noisy, you name
-it. This is the first public version, containing many known issues and is still very early on in
+it. This is the third public version, containing many known issues and is still very early on in
 the roadmap. I'd love to hear feedback so I can steer this thing in a useful direction and make
 this software as useful and excellent as it can be.
 
@@ -33,12 +33,15 @@ Twitch:     <https://www.twitch.tv/connermusician><br/>
 
 ### Known Issues / Housekeeping
 
-- Sweeps are included in code but disabled until cleaner implementations may be made
+- Some tonal oscillators have frequency and samplerate-dependent errors I am currently unsure
+  on how to fix. Among these are the Saw, Square, Pulse, Sharktooth, and Dirac Comb waves. The
+  errors typically manifest as a click and some shifting of phase -- I am assuming this is related
+  to rounding errors. If anyone has a clue I'd love the help!
 - Multichannel behavior is loose, and frequently unpredictable
-- The tonal oscillators are a little noisy, see roadmap for planned fix
   
 ### Roadmap
 
+- Better testing on windows platform
 - A few more standard noise types, namely burst and true OVN
 - More predictable and defined multichannel behavior
 - dBFS units as an optional alternative to pure amplitude values for the gain scalar

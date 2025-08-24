@@ -1,9 +1,9 @@
 [package]
 name = "homados"
-version = "0.0.1"
+version = "0.0.3"
 edition = "2024"
 authors = ["conner"]
-description = "hi test oh wow a description!"
+description = "Signal should be simple."
 readme = "README.md"
 license-file = "License.md"
 

@@ -14,14 +14,14 @@
 // We need to make sure that they are scaled correctly when we apply them to our signal though...
 // We also have some parameters specific to each category of window shape that could change.
 
-use std::f32::consts::{E, TAU, PI, FRAC_PI_2};
+use std::f64::consts::{E, TAU, PI, FRAC_PI_2};
 
 // Duration here is seen as sd - 1, as we wish to guarantee that the initial and final sample
 // scalars are the actual intended endpoint values (0 or 1) of our functions. If we don't do this,
 // the functions may reach their target value 1 sample "after" the end of the output, which will
 // cause issues in a variety of scenarios.
-pub fn match_window(window: &str, k: f32, sd: u32, x: f32) -> f32 {
-    let d: f32 = sd as f32 - 1.0;
+pub fn match_window(window: &str, k: f64, sd: u32, x: f64) -> f64 {
+    let d: f64 = sd as f64 - 1.0;
     match window {
         "default" | "def" | "flat" | "unity" | "full" | "none" | "constant" | "const" => 1.0,
         "linear_out" | "lin_out" => linear_out(d, x),
@@ -113,19 +113,19 @@ pub fn match_window(window: &str, k: f32, sd: u32, x: f32) -> f32 {
 //////-------------------------------------------
 //////      Linear
 //////-------------------------------------------
-pub fn linear_out(duration: f32, sample: f32) -> f32 {
+pub fn linear_out(duration: f64, sample: f64) -> f64 {
     1.0 - (sample / duration)
 }
 
-pub fn linear_in(duration: f32, sample: f32) -> f32 {
+pub fn linear_in(duration: f64, sample: f64) -> f64 {
     sample / duration
 }
 
-pub fn linear_io(duration: f32, sample: f32) -> f32 {
+pub fn linear_io(duration: f64, sample: f64) -> f64 {
     1.0 - (((2.0 * sample) - duration).abs() / duration)
 }
 
-pub fn linear_oi(duration: f32, sample: f32) -> f32 {
+pub fn linear_oi(duration: f64, sample: f64) -> f64 {
     ((2.0 * sample) - duration).abs() / duration
 }
 // - - - - - - - - - - - - - - - - - - - - - - -
@@ -135,15 +135,15 @@ pub fn linear_oi(duration: f32, sample: f32) -> f32 {
 //////      Exponential Curves (Default: Exp Curve 1)
 //////-------------------------------------------
 // Exp Curve 1: Logistic curve-inspired, S-Curve 1 functions scaled and cut to use half the "s"
-pub fn exp1_in(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp1_in(duration: f64, sample: f64, k: f64) -> f64 {
     2.0 / (1.0 + (((2.0 * duration) - sample) / sample).powf(k))
 }
 
-pub fn exp1_out(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp1_out(duration: f64, sample: f64, k: f64) -> f64 {
     2.0 / (1.0 + ((duration + sample) / (duration - sample)).powf(k))
 }
 
-pub fn exp1_io(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp1_io(duration: f64, sample: f64, k: f64) -> f64 {
     let diff = duration - sample;
     if sample <= (duration * 0.5) {
         2.0 / (1.0 + ((diff) / sample).powf(k))
@@ -152,7 +152,7 @@ pub fn exp1_io(duration: f32, sample: f32, k: f32) -> f32 {
     }
 }
 
-pub fn exp1_oi(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp1_oi(duration: f64, sample: f64, k: f64) -> f64 {
     let x2 = 2.0 * sample;
     if sample <= (duration * 0.5) {
         2.0 / (1.0 + ((duration + x2) / (duration - x2)).powf(k))
@@ -164,34 +164,34 @@ pub fn exp1_oi(duration: f32, sample: f32, k: f32) -> f32 {
 
 
 // Exp Curve 2: Gaussian "Bell" Curve Function, "magic numbers" here normalize the output gain
-pub fn exp2_out(duration: f32, sample: f32) -> f32 {
-    (1.00637003594226 / ((E as f32).powf((2.25 * sample / duration).powf(2.0)))) - 0.00637003594226
+pub fn exp2_out(duration: f64, sample: f64) -> f64 {
+    (1.00637003594226 / ((E as f64).powf((2.25 * sample / duration).powf(2.0)))) - 0.00637003594226
 }
 
-pub fn exp2_in(duration: f32, sample: f32) -> f32 {
-    (1.00637003594226 / ((E as f32).powf((2.25 * ((sample / duration) - 1.0)).powf(2.0)))) - 0.00637003594226
+pub fn exp2_in(duration: f64, sample: f64) -> f64 {
+    (1.00637003594226 / ((E as f64).powf((2.25 * ((sample / duration) - 1.0)).powf(2.0)))) - 0.00637003594226
 }
 
-pub fn exp2_io(duration: f32, sample: f32) -> f32 {
-    (1.00637003594226 / ((E as f32).powf(((4.5 * sample / duration) - 2.25).powf(2.0)))) - 0.00637003594226
+pub fn exp2_io(duration: f64, sample: f64) -> f64 {
+    (1.00637003594226 / ((E as f64).powf(((4.5 * sample / duration) - 2.25).powf(2.0)))) - 0.00637003594226
 }
 
-pub fn exp2_oi(duration: f32, sample: f32) -> f32 {
+pub fn exp2_oi(duration: f64, sample: f64) -> f64 {
     1.0 - exp2_io(duration, sample)
 }
 // - - - - - - - - - - - - - - - - - - - - - - -
 
 
 // Exp Curve 3: Exponential function -- base e with controllable contour
-pub fn exp3_out(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp3_out(duration: f64, sample: f64, k: f64) -> f64 {
     1.0 - exp3_in(duration, sample, -1.0 * k)
 }
 
-pub fn exp3_in(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp3_in(duration: f64, sample: f64, k: f64) -> f64 {
     (E.powf(k * sample / duration) - 1.0) / (E.powf(k) - 1.0)
 }
 
-pub fn exp3_io(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp3_io(duration: f64, sample: f64, k: f64) -> f64 {
     let x2 = 2.0 * sample;
     let k2 = -1.0 * k;
     if sample <= (duration * 0.5) {
@@ -201,7 +201,7 @@ pub fn exp3_io(duration: f32, sample: f32, k: f32) -> f32 {
     }
 }
 
-pub fn exp3_oi(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp3_oi(duration: f64, sample: f64, k: f64) -> f64 {
     let x2 = 2.0 * sample;
     let k2 = -1.0 * k;
     if sample <= (duration * 0.5) {
@@ -214,15 +214,15 @@ pub fn exp3_oi(duration: f32, sample: f32, k: f32) -> f32 {
 
 
 // Exp Curve 4: Power function with controllable contour
-pub fn exp4_out(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp4_out(duration: f64, sample: f64, k: f64) -> f64 {
     ((sample - duration) / duration).powf(k)
 }
 
-pub fn exp4_in(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp4_in(duration: f64, sample: f64, k: f64) -> f64 {
     (sample / duration).powf(k)
 }
 
-pub fn exp4_io(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp4_io(duration: f64, sample: f64, k: f64) -> f64 {
     if sample <= (duration * 0.5) {
         (2.0 * sample / duration).powf(k)
     } else {
@@ -230,14 +230,14 @@ pub fn exp4_io(duration: f32, sample: f32, k: f32) -> f32 {
     }
 }
 
-pub fn exp4_oi(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn exp4_oi(duration: f64, sample: f64, k: f64) -> f64 {
     (((2.0 * sample) - duration) / duration).powf(k)
 }
 // - - - - - - - - - - - - - - - - - - - - - - -
 
 
 // Exp Curve 5: Audio Potentiometer "Log Taper", Piecewise Linear w/ no knee
-pub fn exp5_out(duration: f32, sample: f32) -> f32 {
+pub fn exp5_out(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.5) {
         1.0 - (1.8 * quot)
@@ -246,7 +246,7 @@ pub fn exp5_out(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn exp5_in(duration: f32, sample: f32) -> f32 {
+pub fn exp5_in(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.5) {
         0.2 * quot
@@ -255,7 +255,7 @@ pub fn exp5_in(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn exp5_io(duration: f32, sample: f32) -> f32 {
+pub fn exp5_io(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.25) {
         0.4 * quot
@@ -268,7 +268,7 @@ pub fn exp5_io(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn exp5_oi(duration: f32, sample: f32) -> f32 {
+pub fn exp5_oi(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.25) {
         1.0 - (3.6 * quot)
@@ -287,15 +287,15 @@ pub fn exp5_oi(duration: f32, sample: f32) -> f32 {
 //////      Logarithmic Curves (Default: Log Curve 1)
 //////-------------------------------------------
 // Log Curve 1: Standard Log (base 10, scaled)
-pub fn log1_out(duration: f32, sample: f32) -> f32 {
+pub fn log1_out(duration: f64, sample: f64) -> f64 {
     (10.0 - (9.0 * sample / duration)).log10()
 }
 
-pub fn log1_in(duration: f32, sample: f32) -> f32 {
+pub fn log1_in(duration: f64, sample: f64) -> f64 {
     (1.0 + (9.0 * sample / duration)).log10()
 }
 
-pub fn log1_io(duration: f32, sample: f32) -> f32 {
+pub fn log1_io(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.5) {
         (1.0 + (18.0 * quot)).log10()
@@ -304,7 +304,7 @@ pub fn log1_io(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn log1_oi(duration: f32, sample: f32) -> f32 {
+pub fn log1_oi(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.5) {
         (10.0 - (18.0 * quot)).log10()
@@ -316,7 +316,7 @@ pub fn log1_oi(duration: f32, sample: f32) -> f32 {
 
 
 // Log Curve 2: Audio Potentiometer "Anti-Log (or Inverse Log) Taper", Piecewise Linear w/ no knee
-pub fn log2_out(duration: f32, sample: f32) -> f32 {
+pub fn log2_out(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.5) {
         1.0 - (0.2 * quot)
@@ -325,7 +325,7 @@ pub fn log2_out(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn log2_in(duration: f32, sample: f32) -> f32 {
+pub fn log2_in(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.5) {
         1.8 * quot
@@ -334,7 +334,7 @@ pub fn log2_in(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn log2_io(duration: f32, sample: f32) -> f32 {
+pub fn log2_io(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.25) {
         3.6 * quot
@@ -347,7 +347,7 @@ pub fn log2_io(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn log2_oi(duration: f32, sample: f32) -> f32 {
+pub fn log2_oi(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.25) {
         1.0 - (0.4 * quot)
@@ -366,34 +366,34 @@ pub fn log2_oi(duration: f32, sample: f32) -> f32 {
 //////      Equal Power Curves (Default: Equal Power 1)
 //////-------------------------------------------
 // Equal Power 1: Sinusoidal -- opposing sin and cos function slices
-pub fn eqp1_out(duration: f32, sample: f32) -> f32 {
+pub fn eqp1_out(duration: f64, sample: f64) -> f64 {
     (sample * FRAC_PI_2 / duration).cos()
 }
 
-pub fn eqp1_in(duration: f32, sample: f32) -> f32 {
+pub fn eqp1_in(duration: f64, sample: f64) -> f64 {
     (sample * FRAC_PI_2 / duration).sin()
 }
 
-pub fn eqp1_io(duration: f32, sample: f32) -> f32 {
+pub fn eqp1_io(duration: f64, sample: f64) -> f64 {
     (sample * PI / duration).sin()
 }
 
-pub fn eqp1_oi(duration: f32, sample: f32) -> f32 {
+pub fn eqp1_oi(duration: f64, sample: f64) -> f64 {
     (sample * PI / duration).cos()
 }
 // - - - - - - - - - - - - - - - - - - - - - - -
 
 
 // Equal Power 2: Square Root -- scaled square root function
-pub fn eqp2_out(duration: f32, sample: f32) -> f32 {
+pub fn eqp2_out(duration: f64, sample: f64) -> f64 {
    ((duration - sample) / duration).sqrt()
 }
 
-pub fn eqp2_in(duration: f32, sample: f32) -> f32 {
+pub fn eqp2_in(duration: f64, sample: f64) -> f64 {
     (sample / duration).sqrt()
 }
 
-pub fn eqp2_io(duration: f32, sample: f32) -> f32 {
+pub fn eqp2_io(duration: f64, sample: f64) -> f64 {
     let x2 = 2.0 * sample / duration;
     if sample <= (duration * 0.5) {
         x2.sqrt()
@@ -402,7 +402,7 @@ pub fn eqp2_io(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn eqp2_oi(duration: f32, sample: f32) -> f32 {
+pub fn eqp2_oi(duration: f64, sample: f64) -> f64 {
     let x2 = 2.0 * sample / duration;
     if sample <= (duration * 0.5) {
         (1.0 - x2).sqrt()
@@ -417,34 +417,34 @@ pub fn eqp2_oi(duration: f32, sample: f32) -> f32 {
 //////      S-Curves (Default: S-Curve 1)
 //////-------------------------------------------
 // S-Curve 1: Sinusoidal -- basic cos function curves scaled
-pub fn sc1_out(duration: f32, sample: f32) -> f32 {
+pub fn sc1_out(duration: f64, sample: f64) -> f64 {
     0.5 * (1.0 + (PI * sample / duration).cos())
 }
 
-pub fn sc1_in(duration: f32, sample: f32) -> f32 {
+pub fn sc1_in(duration: f64, sample: f64) -> f64 {
     0.5 * (1.0 - (PI * sample / duration).cos())
 }
 
-pub fn sc1_io(duration: f32, sample: f32) -> f32 {
+pub fn sc1_io(duration: f64, sample: f64) -> f64 {
     0.5 * (1.0 - (TAU * sample / duration).cos())
 }
 
-pub fn sc1_oi(duration: f32, sample: f32) -> f32 {
+pub fn sc1_oi(duration: f64, sample: f64) -> f64 {
     0.5 * (1.0 + (TAU * sample / duration).cos())
 }
 // - - - - - - - - - - - - - - - - - - - - - - -
 
 
 // S-Curve 2: Logistic curve-inspired, Piecewise Sigmoid-like that I enjoy
-pub fn sc2_in(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn sc2_in(duration: f64, sample: f64, k: f64) -> f64 {
     1.0 - (1.0 / (1.0 + (sample / (duration - sample)).powf(k)))
 }
 
-pub fn sc2_out(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn sc2_out(duration: f64, sample: f64, k: f64) -> f64 {
     1.0 / (1.0 + (sample / (duration - sample)).powf(k))
 }
 
-pub fn sc2_io(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn sc2_io(duration: f64, sample: f64, k: f64) -> f64 {
     if sample <= (duration * 0.5) {
         1.0 / (1.0 + ((duration / (2.0 * sample)) - 1.0).powf(k))
     } else {
@@ -452,7 +452,7 @@ pub fn sc2_io(duration: f32, sample: f32, k: f32) -> f32 {
     }
 }
 
-pub fn sc2_oi(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn sc2_oi(duration: f64, sample: f64, k: f64) -> f64 {
     if sample <= (duration * 0.5) {
         1.0 - (1.0 / (1.0 + ((duration / (2.0 * sample)) - 1.0).powf(k)))
     } else {
@@ -463,7 +463,7 @@ pub fn sc2_oi(duration: f32, sample: f32, k: f32) -> f32 {
 
 
 // S-Curve 3: Power function curves spliced to our desired inflection points
-pub fn sc3_in(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn sc3_in(duration: f64, sample: f64, k: f64) -> f64 {
     let quot = 2.0 / duration;
     if sample <= (duration * 0.5) {
         0.5 * (quot * sample).powf(k)
@@ -472,7 +472,7 @@ pub fn sc3_in(duration: f32, sample: f32, k: f32) -> f32 {
     }
 }
 
-pub fn sc3_out(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn sc3_out(duration: f64, sample: f64, k: f64) -> f64 {
     let quot = 2.0 / duration;
     if sample <= (duration * 0.5) {
         1.0 - (0.5 * (quot * sample).powf(k))
@@ -481,7 +481,7 @@ pub fn sc3_out(duration: f32, sample: f32, k: f32) -> f32 {
     }
 }
 
-pub fn sc3_io(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn sc3_io(duration: f64, sample: f64, k: f64) -> f64 {
     let quot = 2.0 / duration;
     let quot2 = 2.0 * quot;
     if sample <= (duration * 0.25) {
@@ -493,7 +493,7 @@ pub fn sc3_io(duration: f32, sample: f32, k: f32) -> f32 {
     }
 }
 
-pub fn sc3_oi(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn sc3_oi(duration: f64, sample: f64, k: f64) -> f64 {
     let quot = 2.0 / duration;
     let quot2 = 2.0 * quot;
     if sample <= (duration * 0.25) {
@@ -508,7 +508,7 @@ pub fn sc3_oi(duration: f32, sample: f32, k: f32) -> f32 {
 
 
 // S-Curve 4: Ellipse quadrants spliced to our desired inflection points
-pub fn sc4_out(duration: f32, sample: f32) -> f32 {
+pub fn sc4_out(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.5) {
         0.5 * (1.0 + (1.0 - (2.0 * quot).powf(2.0)).sqrt())
@@ -517,7 +517,7 @@ pub fn sc4_out(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn sc4_in(duration: f32, sample: f32) -> f32 {
+pub fn sc4_in(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     if sample <= (duration * 0.5) {
         0.5 * (1.0 - (1.0 - (2.0 * quot).powf(2.0)).sqrt())
@@ -526,7 +526,7 @@ pub fn sc4_in(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn sc4_io(duration: f32, sample: f32) -> f32 {
+pub fn sc4_io(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     let quot2 = 2.0 * quot;
     if sample <= (duration * 0.25) {
@@ -538,7 +538,7 @@ pub fn sc4_io(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn sc4_oi(duration: f32, sample: f32) -> f32 {
+pub fn sc4_oi(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     let quot2 = 2.0 * quot;
     if sample <= (duration * 0.25) {
@@ -556,17 +556,17 @@ pub fn sc4_oi(duration: f32, sample: f32) -> f32 {
 //////      Special Curves (*No Default*)
 //////-------------------------------------------
 // Cubic Hermite Spline: "The Classic" cubic hermite spline -- 3x^2 - 2x^3, scaled
-pub fn chs_out(duration: f32, sample: f32) -> f32 {
+pub fn chs_out(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     1.0 - (quot.powf(2.0) * (3.0 - (2.0 * quot)))
 }
 
-pub fn chs_in(duration: f32, sample: f32) -> f32 {
+pub fn chs_in(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     quot.powf(2.0) * (3.0 - (2.0 * quot))
 }
 
-pub fn chs_io(duration: f32, sample: f32) -> f32 {
+pub fn chs_io(duration: f64, sample: f64) -> f64 {
     let quot = sample / duration;
     let exp = ((2.0 * sample) - duration) / duration;
     if sample <= (duration * 0.5) {
@@ -576,7 +576,7 @@ pub fn chs_io(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn chs_oi(duration: f32, sample: f32) -> f32 {
+pub fn chs_oi(duration: f64, sample: f64) -> f64 {
     let quot2 = 2.0 * sample / duration;
     let exp = ((2.0 * sample) - duration) / duration;
     if sample <= (duration * 0.5) {
@@ -589,17 +589,17 @@ pub fn chs_oi(duration: f32, sample: f32) -> f32 {
 
 
 // Cubic Hermite Spline Generalized: Above function adapted to allow any power for contouring
-pub fn chsg_out(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn chsg_out(duration: f64, sample: f64, k: f64) -> f64 {
     let quot = sample / duration;
     1.0 - (quot.powf(k) * (k + 1.0 - (k * quot)))
 }
 
-pub fn chsg_in(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn chsg_in(duration: f64, sample: f64, k: f64) -> f64 {
     let quot = sample / duration;
     quot.powf(k) * (k + 1.0 - (k * quot))
 }
 
-pub fn chsg_io(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn chsg_io(duration: f64, sample: f64, k: f64) -> f64 {
     let quot = sample / duration;
     let exp = -2.0 * (sample - duration) / duration;
     if sample <= (duration * 0.5) {
@@ -609,7 +609,7 @@ pub fn chsg_io(duration: f32, sample: f32, k: f32) -> f32 {
     }
 }
 
-pub fn chsg_oi(duration: f32, sample: f32, k: f32) -> f32 {
+pub fn chsg_oi(duration: f64, sample: f64, k: f64) -> f64 {
     let quot2 = 2.0 * sample / duration;
     let exp = -2.0 * (sample - duration) / duration;
     if sample <= (duration * 0.5) {
@@ -623,27 +623,27 @@ pub fn chsg_oi(duration: f32, sample: f32, k: f32) -> f32 {
 
 // [2]
 // Signalsmith Crossfade -- cheap polynomial crossfade curve with near constant energy
-pub fn sscf_out(duration: f32, sample: f32) -> f32 {
-    let x: f32 = sample / duration;
-    let x2: f32 = 1.0 - x;
-    let a: f32 = x * x2;
+pub fn sscf_out(duration: f64, sample: f64) -> f64 {
+    let x: f64 = sample / duration;
+    let x2: f64 = 1.0 - x;
+    let a: f64 = x * x2;
     (x2 + (a * (1.0 + (1.4186 * a)))).powf(2.0)
 }
 
-pub fn sscf_in(duration: f32, sample: f32) -> f32 {
-    let x: f32 = sample / duration;
-    let x2: f32 = 1.0 - x;
-    let a: f32 = x * x2;
+pub fn sscf_in(duration: f64, sample: f64) -> f64 {
+    let x: f64 = sample / duration;
+    let x2: f64 = 1.0 - x;
+    let a: f64 = x * x2;
     (x + (a * (1.0 + (1.4186 * a)))).powf(2.0)
 }
 
-pub fn sscf_io(duration: f32, sample: f32) -> f32 {
-    let x: f32 = 2.0 * sample / duration;
-    let x2: f32 = 1.0 - x;
-    let x3: f32 = ((2.0 * sample) - duration) / duration;
-    let x4: f32 = 1.0 - x3;
-    let a: f32 = x * x2;
-    let a2: f32 = x3 * x4;
+pub fn sscf_io(duration: f64, sample: f64) -> f64 {
+    let x: f64 = 2.0 * sample / duration;
+    let x2: f64 = 1.0 - x;
+    let x3: f64 = ((2.0 * sample) - duration) / duration;
+    let x4: f64 = 1.0 - x3;
+    let a: f64 = x * x2;
+    let a2: f64 = x3 * x4;
     if sample <= (duration * 0.5) {
         (x + (a * (1.0 + (1.4186 * a)))).powf(2.0)
     } else {
@@ -651,13 +651,13 @@ pub fn sscf_io(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn sscf_oi(duration: f32, sample: f32) -> f32 {
-    let x: f32 = 2.0 * sample / duration;
-    let x2: f32 = 1.0 - x;
-    let x3: f32 = ((2.0 * sample) - duration) / duration;
-    let x4: f32 = 1.0 - x3;
-    let a: f32 = x * x2;
-    let a2: f32 = x3 * x4;
+pub fn sscf_oi(duration: f64, sample: f64) -> f64 {
+    let x: f64 = 2.0 * sample / duration;
+    let x2: f64 = 1.0 - x;
+    let x3: f64 = ((2.0 * sample) - duration) / duration;
+    let x4: f64 = 1.0 - x3;
+    let a: f64 = x * x2;
+    let a2: f64 = x3 * x4;
     if sample <= (duration * 0.5) {
         (x2 + (a * (1.0 + (1.4186 * a)))).powf(2.0)
     } else {
@@ -668,15 +668,15 @@ pub fn sscf_oi(duration: f32, sample: f32) -> f32 {
 
 
 // Tetrational: First-order tetration of our scaled current sample
-pub fn tet_out(duration: f32, sample: f32) -> f32 {
+pub fn tet_out(duration: f64, sample: f64) -> f64 {
     duration / (sample + duration).powf((sample / duration) + 1.0)
 }
 
-pub fn tet_in(duration: f32, sample: f32) -> f32 {
+pub fn tet_in(duration: f64, sample: f64) -> f64 {
     sample.powf(sample / duration) / duration
 }
 
-pub fn tet_io(duration: f32, sample: f32) -> f32 {
+pub fn tet_io(duration: f64, sample: f64) -> f64 {
     let quot2 = 2.0 * sample / duration;
     if sample <= (duration * 0.5) {
         2.0 * sample.powf(quot2) / duration
@@ -685,22 +685,22 @@ pub fn tet_io(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn tet_oi(duration: f32, sample: f32) -> f32 {
+pub fn tet_oi(duration: f64, sample: f64) -> f64 {
     1.0 - tet_io(duration, sample)
 }
 // - - - - - - - - - - - - - - - - - - - - - - -
 
 
 // Super Log: Reciprocal tetrational curves, not true super-log
-pub fn slg_out(duration: f32, sample: f32) -> f32 {
+pub fn slg_out(duration: f64, sample: f64) -> f64 {
     1.0 - (sample.powf(sample / duration) / duration)
 }
 
-pub fn slg_in(duration: f32, sample: f32) -> f32 {
+pub fn slg_in(duration: f64, sample: f64) -> f64 {
     1.0 - (duration / (sample + duration).powf(1.0 + (sample / duration)))
 }
 
-pub fn slg_io(duration: f32, sample: f32) -> f32 {
+pub fn slg_io(duration: f64, sample: f64) -> f64 {
     let x2 = 2.0 * sample;
     let quot2 = x2 / duration;
     if sample <= (duration * 0.5) {
@@ -710,7 +710,7 @@ pub fn slg_io(duration: f32, sample: f32) -> f32 {
     }
 }
 
-pub fn slg_oi(duration: f32, sample: f32) -> f32 {
+pub fn slg_oi(duration: f64, sample: f64) -> f64 {
     let x2 = 2.0 * sample;
     let quot2 = x2 / duration;
     if sample <= (duration * 0.5) {

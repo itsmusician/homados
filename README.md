@@ -16,8 +16,6 @@ There is a manual for this software including information on how to use it, what
 references, and acknowledgements. I will update this README, too, to include a more concise form
 of some of that.
 
-If you're seeing this thanks for being one of early ones. That's really cool of you.
-
 Enjoy!
 <br/>
 

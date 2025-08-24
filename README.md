@@ -33,10 +33,7 @@ Twitch:     <https://www.twitch.tv/connermusician><br/>
 
 ### Known Issues / Housekeeping
 
-- Some tonal oscillators have frequency and samplerate-dependent errors I am currently unsure
-  on how to fix. Among these are the Saw, Square, Pulse, Sharktooth, and Dirac Comb waves. The
-  errors typically manifest as a click and some shifting of phase -- I am assuming this is related
-  to rounding errors. If anyone has a clue I'd love the help!
+- Some tonal oscillators are prone to aliasing artifacts. Working on this.
 - Multichannel behavior is loose, and frequently unpredictable
   
 ### Roadmap
@@ -44,7 +41,5 @@ Twitch:     <https://www.twitch.tv/connermusician><br/>
 - Better testing on windows platform
 - A few more standard noise types, namely burst and true OVN
 - More predictable and defined multichannel behavior
-- dBFS units as an optional alternative to pure amplitude values for the gain scalar
 - output normalization
-- More options in the debug script
 - other stuff but I'm not tellin'
